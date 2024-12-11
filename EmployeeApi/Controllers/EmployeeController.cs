@@ -1,5 +1,6 @@
 ﻿using EmployeeDomain.Dto;
 using EmployeeDomain.Interfaces;
+using EmployeeDomain.Utilties.Validation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeApi.Controllers
@@ -9,10 +10,11 @@ namespace EmployeeApi.Controllers
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeService _employeeService;
-
-        public EmployeeController(IEmployeeService employeeService)
+        private readonly EmployeeValidator _validationRules;
+        public EmployeeController(IEmployeeService employeeService, EmployeeValidator validationRules)
         {
             _employeeService = employeeService;
+            _validationRules = validationRules;
         }
 
         [HttpGet("GetAllEmployeeData")]
@@ -44,12 +46,20 @@ namespace EmployeeApi.Controllers
         [HttpPost("AddEmployee")]
         public async Task<IActionResult> AddEmployee([FromBody] AddEmployeeDto addEmployeeDto)
         {
-            var response = await _employeeService.AddEmployee(addEmployeeDto);
-            if (response == true)
+            var validModel = await _validationRules.ValidateAsync(addEmployeeDto);
+            if (validModel.IsValid)
             {
-                return Created();
+                var response = await _employeeService.AddEmployee(addEmployeeDto);
+                if (response == true)
+                {
+                    return Created();
+                }
             }
-            return BadRequest();
+            List<string> errors = validModel.Errors
+                                       .Select(e => e.ErrorMessage)
+                                       .ToList();
+
+            return BadRequest(errors);
         }
 
         [HttpPut("UpdateEmployee/{EmployeeId}")]

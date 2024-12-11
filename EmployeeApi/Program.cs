@@ -12,8 +12,11 @@ string connectionString = builder.Configuration.GetConnectionString("EmployeeDb"
 //Add dependenacy injection
 AddDependeancyInjection.AddDependeancy(builder.Services);
 
-//Add Dbcontext layer condfiguration
+//Add Dbcontext layer configuration
 ConfigureDbContext.AddDbContext(builder.Services, connectionString);
+
+//Add validation
+InjectValidator.AddValidator(builder.Services);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
